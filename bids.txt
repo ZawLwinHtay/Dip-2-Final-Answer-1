@@ -1,0 +1,1 @@
+{"auction_id": "1700305525", "bid_amount": 50000, "bidder": "Zaw"}

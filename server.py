@@ -13,6 +13,7 @@ class Bids_server:
         self.server.listen()
         self.clients: list = []
         self.bids: list = []
+        # self.aliases: list = []
 
         # files
         self.users_txt = "users.txt"
@@ -23,8 +24,10 @@ class Bids_server:
         self.all_user = []
 
     def broadcast(self, message):
+        # print(self.clients)
         for client in self.clients:
             client.send(message)
+            # print("done")
 
     def handle_client(self, client, addr):
         while True:
@@ -47,6 +50,7 @@ class Bids_server:
     def register(self, client, log, data):
         user_found = self.check_user(log, data)
         if not user_found:
+            # print("check", user_found)
             add_user = self.writeFile(self.users_txt, data)
             self.readFile(self.users_txt)
             client.send(f">>> {add_user}: {data[1]}".encode('utf-8'))
@@ -55,7 +59,7 @@ class Bids_server:
 
     def login(self, client, log, data):
         user_found = self.check_user(log, data)
-        print("login user found: ", user_found)
+        # print("login user found: ", user_found)
         client.send(f"{user_found}".encode('utf-8'))
         if user_found[0]:
             while True:
@@ -68,27 +72,42 @@ class Bids_server:
                         try:
                             msg = ast.literal_eval(msg)
                             if msg[0] == "fill_amount":
-                                update = self.update_user_data(msg[1], msg[2])
-                                client.send(f"{update}".encode('utf-8'))
+                                self.update_user_data(msg[1], msg[2])
+                            elif msg[0] == "transfer_amount":
+                                self.check_user_and_transfer_amount(client, msg[1], msg[2])
                         except Exception as err:
-                            print("This is error", err)
+                            print("This is error: ", err)
                             continue
                 else:
                     break
 
-    def update_user_data(self, oldData: dict, newData: dict):
-        exist = 0
+    def check_user_and_transfer_amount(self, client, username, phone):
+        data = None
         for i in range(len(self.all_user)):
-            if self.all_user[i] == oldData:
-                self.all_user[i] = newData
-                exist = 1
+            if self.all_user[i][f"{i}"]["username"] == username and self.all_user[i][f"{i}"]["phone"] == phone:
+                print(self.all_user[i])
+                data = [1, self.all_user[i]]
                 break
-        # over wirte (update user data)
-        with open(self.users_txt, 'w') as file:
-            for user in self.all_user:
-                file.write(f"{json.dumps(user)}\n")
-        self.readFile(self.users_txt)
-        return exist
+            else:
+                data = [0]
+        client.send(f"{data}".encode('utf-8'))
+        msg = client.recv(1024).decode('utf-8')
+        msg = ast.literal_eval(msg)
+        if msg[0]:
+            # update other user data
+            self.update_user_data(msg[1], msg[2])
+
+            # update my data
+            self.update_user_data(msg[3], msg[4])
+
+
+        else:
+            print(f"Received {msg[0]}")
+
+
+    def update_user_data(self, ids, newData: dict):
+        self.all_user[ids] = newData
+        self.update_users_txt()
 
     def check_user(self, log, data):
         exits = None
@@ -115,7 +134,7 @@ class Bids_server:
                 check_pass = self.all_user[i][f'{i}']['password']
                 if check_email == data[1] and check_pass == data[2]:
                     user = [1, self.all_user[i][f'{i}'], i]
-                    print(user)
+                    # print(user)
                     break
                 else:
                     user = [0, "Email or Password is not found. Please, Try again!!!"]
@@ -138,9 +157,21 @@ class Bids_server:
                 ids = list(json.loads(rfile.readlines()[-1]).keys())
                 data = {"username": data[1], "password": data[2], "email": data[3], "phone": data[4], "show_money": int(data[5]), "my_auctions": []}
                 data = {int(ids[0]) + 1: data}
-                print(data)
                 file.write(json.dumps(data) + "\n")
                 return "Registration is Successful!!!"
+
+    def update_users_txt(self):
+        # overwrite (update user data)
+        with open(self.users_txt, 'w') as file:
+            for user in self.all_user:
+                file.write(f"{json.dumps(user)}\n")
+        self.readFile(self.users_txt)
+
+    # def updateFile(self, filename, data):
+    #     with open(filename, 'w') as file:
+    #         for i in filename:
+    #             file.write(f"{i}\n")
+    #     self.readFile(filename)
 
     def receive(self):
         while True:

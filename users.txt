@@ -1,7 +1,7 @@
 {"0": {"username": "Zaw", "password": "Zaw", "email": "Zaw@gmail.com", "phone": "09222333444", "show_money": 0, "my_auctions": []}}
 {"1": {"username": "Lwin", "password": "Lwin", "email": "Lwin@gmail.com", "phone": "09222333444", "show_money": 0, "my_auctions": []}}
 {"2": {"username": "Htay", "password": "Htay", "email": "Htay@gmail.com", "phone": "09222333444", "show_money": 0, "my_auctions": []}}
-{"3": {"username": "zlh", "password": "zlhpass", "email": "zlh@gmail.com", "phone": "09234234234", "show_money": 2000, "my_auctions": []}}
+{"3": {"username": "zlh", "password": "zlhpass", "email": "zlh@gmail.com", "phone": "09234234234", "show_money": 0, "my_auctions": []}}
 {"4": {"username": "zzz", "password": "zzzpass", "email": "zzz@gmail.com", "phone": "09345345345", "show_money": 0, "my_auctions": []}}
-{"5": {"username": "zaw", "password": "zawpass", "email": "zaw@gmail.com", "phone": "09345345345", "show_money": 1000, "my_auctions": []}}
+{"5": {"username": "zaw", "password": "zawpass", "email": "zaw@gmail.com", "phone": "09345345345", "show_money": 0, "my_auctions": []}}
 {"6": {"username": "aaa", "password": "aaapass", "email": "aaa@gmail.com", "phone": "09456456456", "show_money": 0, "my_auctions": []}}

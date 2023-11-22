@@ -157,6 +157,7 @@ class Bids_server:
                 ids = list(json.loads(rfile.readlines()[-1]).keys())
                 data = {"username": data[1], "password": data[2], "email": data[3], "phone": data[4], "show_money": int(data[5]), "my_auctions": []}
                 data = {int(ids[0]) + 1: data}
+                print(data)
                 file.write(json.dumps(data) + "\n")
                 return "Registration is Successful!!!"
 
@@ -166,12 +167,6 @@ class Bids_server:
             for user in self.all_user:
                 file.write(f"{json.dumps(user)}\n")
         self.readFile(self.users_txt)
-
-    # def updateFile(self, filename, data):
-    #     with open(filename, 'w') as file:
-    #         for i in filename:
-    #             file.write(f"{i}\n")
-    #     self.readFile(filename)
 
     def receive(self):
         while True:

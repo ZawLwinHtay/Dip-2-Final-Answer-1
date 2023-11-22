@@ -2,6 +2,7 @@ import ast
 import threading
 import socket
 import json
+import re
 
 
 class Bids_client:
@@ -20,7 +21,7 @@ class Bids_client:
         while True:
             try:
                 opt = int(input(
-                    "=====================\nPress 1 to 'Register'\nPress 2 to 'Login'\nPress 3 to 'Exit'\nEnter Choose Option: "))  # =====================\n
+                    "\n=====================\nPress 1 to 'Register'\nPress 2 to 'Login'\nPress 3 to 'Exit'\nEnter Choose Option: "))
                 if opt == 1:
                     self.register()
                 elif opt == 2:
@@ -38,24 +39,32 @@ class Bids_client:
 
     # register page
     def register(self):
-        name = input("Enter 'Your Name' for Registration: ")
-        password = input("Enter 'Password' for Registration: ")
-        email = input("Enter 'Email' for Registration: ")
-        phone = input("Enter 'Phone' for Registration: ")
-        show_money = "0"
+        while True:
+            name = input("Enter 'Your Name' for Registration: ")
+            if name:
+                password = input("Enter 'Password' for Registration: ")
+                if password:
+                    email = input("Enter 'Email' for Registration: ")
+                    if email:
+                        if self.email_validation(email):
+                            phone = int(input("Enter 'Phone' for Registration: "))
+                            if phone:
+                                show_money = "0"
+                                send_data = "register" + "~" + name + "~" + password + "~" + email + "~" + "0"+str(phone) + "~" + show_money
+                                self.client.send(send_data.encode('utf-8'))
+                                recv_data = self.client.recv(1024).decode('utf-8')
+                                print(recv_data)
+                                break
+                        else:
+                            print("===== Invalid email address. =====")
 
-        # send_data = {"msg": "register", "username": name, "password": password}
-        # send_data = {"register": {"username": "Zaw", "password": "Zaw", "email": "Zaws@gmail.com"}}
-        send_data = "register" + "~" + name + "~" + password + "~" + email + "~" + phone + "~" + show_money
-        self.client.send(send_data.encode('utf-8'))
-        recv_data = self.client.recv(1024).decode('utf-8')
-        print(recv_data)
+    def email_validation(self, email):
+        pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        match = re.match(pattern, email)
+        return bool(match)
 
     # login page
     def login(self, email, password):
-        # email = input("Enter 'Email' for Login: ")
-        # password = input("Enter 'Password' for Login: ")
-        # print(email, password)
         send_data = "login" + "~" + email + "~" + password
         self.client.send(send_data.encode('utf-8'))
         recv_data = self.client.recv(1024).decode('utf-8')
@@ -63,7 +72,6 @@ class Bids_client:
         if recv_data[0]:
             self.myInfo = recv_data[1]
             self.myId = recv_data[2]
-            # self.client.send("success".encode('utf-8'))
             self.hello_boss()
         else:
             print(f">>> Login Error Msg: {recv_data[1]}")
@@ -80,8 +88,6 @@ class Bids_client:
                 print(f"===== Wellcome <<< {self.myInfo['username']} >>> :id < {self.myId} > =====")
                 print(f"+++++ Your Show Money: {self.myInfo['show_money']} kyats +++++")
                 self.updateInfo = self.myInfo.copy()
-                # print(self.myInfo)
-                # print(self.updateInfo)
                 opt = int(
                     input("Press 1 to Create Auction:\nPress 2 to Go to Place Bids:\nPress 3 to Transfer Amount:\n"
                           "Press 4 to Fill Amount:\nPress 5 Show All Auctions Status:\nPress 6 to Show My Auctions and Status:\n"
@@ -121,30 +127,40 @@ class Bids_client:
 
     def transfer_amount(self):
         try:
+            print(f"+++++ Your current amount: {self.myInfo['show_money']} kyats +++++")
             other_username = input("Enter 'UserName' for you want to transfer: ")
-            other_userphone = input("Enter 'Phone' for you want to transfer: ")
-            data = ["transfer_amount", other_username, other_userphone]
-            self.client.send(f"{data}".encode('utf-8'))
-            msg = self.client.recv(1024).decode('utf-8')
-            msg = ast.literal_eval(msg)  # msg = [ status 0 or 1, other user info dict]
-            status = [0]
-            if msg[0]:
-                print("===== Active User =====")
-                amount = int(input("Enter you want to transfer amount: "))
-                other_user = msg[1]
-                other_user_id = None
-                other_username = None
-                for k, v in other_user.items():
-                    other_user_id = int(k)
-                    v["show_money"] += amount
-                    other_username = v["username"]
-                self.myInfo['show_money'] -= amount
-                status = [1, other_user_id, other_user, self.myId, {f"{self.myId}": self.myInfo}]
-                print(f"===== Success! < {amount} > kyats transfer to < {other_username} > =====")
-            else:
-                print(">>> Error Msg: Not Found User. Please Check Username or Phone!!!")
+            if other_username != self.myInfo["username"]:
+                other_userphone = input("Enter 'Phone' for you want to transfer: ")
+                data = ["transfer_amount", other_username, other_userphone]
+                self.client.send(f"{data}".encode('utf-8'))
+                msg = self.client.recv(1024).decode('utf-8')
+                msg = ast.literal_eval(msg)  # msg = [ status 0 or 1, other user info dict]
+                status = [0]
+                if msg[0]:
+                    print("===== Active User =====")
+                    amount = int(input("Enter you want to transfer amount: "))
+                    if amount <= self.myInfo["show_money"] != 0:
+                        other_user = msg[1]
+                        other_user_id = None
+                        other_username = None
+                        for k, v in other_user.items():
+                            other_user_id = int(k)
+                            v["show_money"] += amount
+                            other_username = v["username"]
+                        self.myInfo['show_money'] -= amount
+                        status = [1, other_user_id, other_user, self.myId, {f"{self.myId}": self.myInfo}]
+                        print(f"===== Success! < {amount} > kyats transfer to < {other_username} > =====")
+                    else:
+                        print(">>> Transfer Err Msg: Not enough money for transfer")
+                        print("                      Please,after fill amount transfer again.")
+                        # self.hello_boss()
+                else:
+                    print(">>> Error Msg: Not Found User. Please Check Username or Phone!!!")
 
-            self.client.send(f"{status}".encode('utf-8'))
+                self.client.send(f"{status}".encode('utf-8'))
+            else:
+                print(f">>> Error Msg: < {other_username} > is you. Don't transfer yourself.")
+                self.transfer_amount()
 
         except Exception as err:
             print("transfer_amount err msg: ", err)

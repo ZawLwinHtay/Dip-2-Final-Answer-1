@@ -3,7 +3,6 @@ import json
 import threading
 import socket
 
-
 class Bids_server:
     def __init__(self):
         host = '127.0.0.1'
@@ -13,7 +12,6 @@ class Bids_server:
         self.server.listen()
         self.clients: list = []
         self.bids: list = []
-        # self.aliases: list = []
 
         # files
         self.users_txt = "users.txt"
@@ -34,6 +32,7 @@ class Bids_server:
             try:
                 message = client.recv(1024)
                 data = message.decode('utf-8').split('~')
+                # print(data)
 
                 goTo = data[0]
                 if goTo == "register":
@@ -53,9 +52,9 @@ class Bids_server:
             # print("check", user_found)
             add_user = self.writeFile(self.users_txt, data)
             self.readFile(self.users_txt)
-            client.send(f">>> {add_user}: {data[1]}".encode('utf-8'))
+            client.send(f"{add_user}".encode('utf-8'))  # send 1 for register success
         else:
-            client.send(f">>> Error Msg for Register: {user_found}".encode('utf-8'))
+            client.send(user_found.encode('utf-8'))  # send 0 for register fail
 
     def login(self, client, log, data):
         user_found = self.check_user(log, data)
@@ -75,6 +74,16 @@ class Bids_server:
                                 self.update_user_data(msg[1], msg[2])
                             elif msg[0] == "transfer_amount":
                                 self.check_user_and_transfer_amount(client, msg[1], msg[2])
+                            elif msg[0] == "update_info":
+                                found_user = self.check_user(msg[0], msg)
+                                # if found_user[0]:
+                                #     client.send(f"{found_user}".encode('utf-8'))
+                                # else:
+                                client.send(f"{found_user}".encode('utf-8'))
+                                if not found_user[0]:
+                                    recv_data = client.recv(1024).decode('utf-8')
+                                    recv_data = ast.literal_eval(recv_data)
+                                    self.update_user_data(recv_data[0], recv_data[1])
                         except Exception as err:
                             print("This is error: ", err)
                             continue
@@ -85,7 +94,7 @@ class Bids_server:
         data = None
         for i in range(len(self.all_user)):
             if self.all_user[i][f"{i}"]["username"] == username and self.all_user[i][f"{i}"]["phone"] == phone:
-                print(self.all_user[i])
+                # print(self.all_user[i])
                 data = [1, self.all_user[i]]
                 break
             else:
@@ -116,13 +125,13 @@ class Bids_server:
                 check_name = self.all_user[i][f'{i}']['username']
                 check_email = self.all_user[i][f'{i}']['email']
                 if check_name == data[1] and check_email == data[3]:
-                    exits = "username and email are already exits, Please, Try again with other different username and email!"
+                    exits = "username and email are already exits. Please, Try again with other different username and email!"
                     break
                 elif check_name == data[1]:
-                    exits = "This user is already exits, Please, Try again with other different username!"
+                    exits = "This user is already exits. Please, Try again with other different username!"
                     break
                 elif check_email == data[3]:
-                    exits = "This email is already exits, Please, Try again with other different email!"
+                    exits = "This email is already exits. Please, Try again with other different email!"
                     break
                 else:
                     exits = 0
@@ -134,11 +143,27 @@ class Bids_server:
                 check_pass = self.all_user[i][f'{i}']['password']
                 if check_email == data[1] and check_pass == data[2]:
                     user = [1, self.all_user[i][f'{i}'], i]
-                    # print(user)
                     break
                 else:
-                    user = [0, "Email or Password is not found. Please, Try again!!!"]
+                    user = [0]
             return user
+        elif log == "update_info":
+            exist = None
+            for i in range(len(self.all_user)):
+                check_email = self.all_user[i][f'{i}']['email']
+                check_name = self.all_user[i][f'{i}']['username']
+                if check_email == data[1] and check_name == data[2]:
+                    exist = [1, "username and email are already exits. Please, Try again with other different username and email!"]
+                    break
+                elif check_email == data[1]:
+                    exist = [1, "This email is already exits. Please, Try again with other different email!"]
+                    break
+                elif check_name == data[2]:
+                    exist = [1, "This user is already exits. Please, Try again with other different username!"]
+                    break
+                else:
+                    exist = [0]
+            return exist
 
     # read file
     def readFile(self, filename):
@@ -159,7 +184,7 @@ class Bids_server:
                 data = {int(ids[0]) + 1: data}
                 print(data)
                 file.write(json.dumps(data) + "\n")
-                return "Registration is Successful!!!"
+                return 1
 
     def update_users_txt(self):
         # overwrite (update user data)

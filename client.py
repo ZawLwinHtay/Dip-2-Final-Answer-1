@@ -4,6 +4,8 @@ import socket
 import json
 import re
 from colorama import Fore
+from datetime import datetime
+import time
 
 
 class Bids_client:
@@ -26,7 +28,7 @@ class Bids_client:
         while True:
             try:
                 opt = int(input(self.blue +
-                    "\n=====================\nPress 1 to 'Register'\nPress 2 to 'Login'\nPress 3 to 'Exit'\nEnter Choose Option: "))
+                                "\n=====================\nPress 1 to 'Register'\nPress 2 to 'Login'\nPress 3 to 'Exit'\nEnter Choose Option: "))
                 if opt == 1:
                     self.register()
                 elif opt == 2:
@@ -47,25 +49,64 @@ class Bids_client:
         while True:
             name = input(self.blue + "\nEnter 'Your Name' for Registration: ")
             if name:
-                password = input(self.blue + "Enter 'Password' for Registration: ")
-                if password:
-                    email = input(self.blue + "Enter 'Email' for Registration: ")
-                    if email:
-                        if self.email_validation(email):
-                            phone = int(input(self.blue + "Enter 'Phone' for Registration: "))
-                            if phone:
-                                show_money = "0"
-                                send_data = "register" + "~" + name + "~" + password + "~" + email + "~" + "0"+str(phone) + "~" + show_money
-                                self.client.send(send_data.encode('utf-8'))
-                                recv_data = self.client.recv(1024).decode('utf-8')
-                                if recv_data == "1":
-                                    print(self.green + "===== Registration Success =====")
-                                    print(self.green + "===== Thank you so much for using this app. =====")
-                                else:
-                                    print(self.red + recv_data)
-                                break
-                        else:
-                            print(self.red + "===== Invalid email address. =====")
+                break
+
+        while True:
+            password = input(self.blue + "Enter 'Password' for Registration: ")
+            if password:
+                break
+
+        while True:
+            email = input(self.blue + "Enter 'Email' for Registration: ")
+            if email:
+                if self.email_validation(email):
+                    break
+                else:
+                    print(self.red + "===== Invalid email address. =====")
+
+        while True:
+            phone = input(self.blue + "Enter 'Phone' for Registration: ")
+            if phone:
+                try:
+                    phone = int(phone)
+                    break
+                except ValueError:
+                    print(self.red + "===== Invalid Phone Input, Try again. =====")
+
+        show_money = "0"
+        send_data = ("register" + "~" + name + "~" + password + "~" + email + "~" +
+                     "0" + str(phone) + "~" + show_money)
+        self.client.send(send_data.encode('utf-8'))
+        recv_data = self.client.recv(1024).decode('utf-8')
+        if recv_data == "1":
+            print(self.green + "===== Registration Success =====")
+            print(self.green + "===== Thank you so much for using this app. =====")
+        else:
+            print(self.red + recv_data)
+
+        # while True:
+        #     name = input(self.blue + "\nEnter 'Your Name' for Registration: ")
+        #     if name:
+        #         password = input(self.blue + "Enter 'Password' for Registration: ")
+        #         if password:
+        #             email = input(self.blue + "Enter 'Email' for Registration: ")
+        #             if email:
+        #                 if self.email_validation(email):
+        #                     phone = int(input(self.blue + "Enter 'Phone' for Registration: "))
+        #                     if phone:
+        #                         show_money = "0"
+        #                         send_data = "register" + "~" + name + "~" + password + "~" + email + "~" + "0" + str(
+        #                             phone) + "~" + show_money
+        #                         self.client.send(send_data.encode('utf-8'))
+        #                         recv_data = self.client.recv(1024).decode('utf-8')
+        #                         if recv_data == "1":
+        #                             print(self.green + "===== Registration Success =====")
+        #                             print(self.green + "===== Thank you so much for using this app. =====")
+        #                         else:
+        #                             print(self.red + recv_data)
+        #                         break
+        #                 else:
+        #                     print(self.red + "===== Invalid email address. =====")
 
     def email_validation(self, email):
         pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
@@ -98,19 +139,14 @@ class Bids_client:
                 print(self.green + f"+++++ Your Show Money: {self.myInfo['show_money']} kyats +++++")
                 self.updateInfo = self.myInfo.copy()
                 opt = int(
-                    input(self.blue + "Press 0 to Show My Info: \nPress 1 to Create Auction:\nPress 2 to Go to Place Bids:\nPress 3 to Transfer Amount:\n"
-                          "Press 4 to Fill Amount:\nPress 5 to Show All Auctions Status:\nPress 6 to Show My Auctions and Status:\n"
-                          "Press 7 to Logout:\nPress 8 to Refresh:\nPress 9 to Exit this app:\nEnter Something: "))
-                if opt == 0:
+                    input(
+                        self.blue + "Press 0 to Show My Info: \nPress 1 to Create Auction:\nPress 2 to Go to Place Bids:\nPress 3 to Transfer Amount:\n"
+                                    "Press 4 to Fill Amount:\nPress 5 to Show All Auctions Status:\nPress 6 to Show My Auctions and Status:\n"
+                                    "Press 7 to Logout:\nPress 8 to Refresh:\nPress 9 to Exit this app:\nEnter Something: "))
+                if opt == 0:  # Done
                     self.show_my_info_and_edit()
-                    # print(self.blue + f"\n===== My Info =====\n"
-                    #                   f"Name: {self.myInfo['username']}\n"
-                    #                   f"Email: {self.myInfo['email']}\n"
-                    #                   f"Phone: {self.myInfo['phone']}\n"
-                    #                   f"My Amount: {self.myInfo['show_money']} kyats")
                 elif opt == 1:
-                    self.client.send("Press 1 to Create Auction".encode('utf-8'))
-                    msg = self.client.recv(1024).decode('utf-8')
+                    self.create_auction()
                 elif opt == 2:
                     self.client.send("Press 2 to Go to Place Bids".encode('utf-8'))
                     msg = self.client.recv(1024).decode('utf-8')
@@ -140,6 +176,47 @@ class Bids_client:
             except Exception as err:
                 print(self.red + "hello_boss err: ", err)
                 self.hello_boss()
+
+    def create_auction(self):
+        print(self.blue + "===== This is Auction Create Page =====")
+        title = input(self.blue + "Enter Title for Auction: ")
+        description = input(self.blue + "Enter Description for Auction: ")
+
+        # auction end_time
+        while True:
+            try:
+                end_date = input("Enter Auction End Date ( YYYY/M/D H:M:S ) : ")
+                end_date = datetime.strptime(end_date, "%Y/%m/%d %H:%M:%S")
+                break
+            except ValueError:
+                print("Error Msg: Incorrect End Date Format!")
+
+        # reserve_price
+        while True:
+            reserve_price = input("Enter Reserve Price for Auction: ")
+            try:
+                reserve_price = int(reserve_price)
+                break
+            except ValueError:
+                print("Error Msg: Invalid Reserve Price Input!")
+
+        old_owner = None
+        current_owner = self.myInfo['username']
+        highest_bidder = []
+        highest_bid = 0
+        sale = False
+        owner_id = self.myId
+
+        send_data = ["create_auction", title, description, str(end_date), reserve_price, old_owner,
+                     current_owner, highest_bidder, highest_bid, sale, owner_id]
+        self.client.send(f"{send_data}".encode('utf-8'))
+
+        recv_data = self.client.recv(1024).decode('utf-8')
+        recv_data = int(recv_data)
+        if recv_data:
+            print(self.green + "Success! New Auction Created!!")
+        else:
+            print(self.red + "Error Msg: Fail! Auction Create, try again!!")
 
     def show_my_info_and_edit(self):
         try:

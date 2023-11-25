@@ -50,7 +50,10 @@ class Bids_server:
         user_found = self.check_user(log, data)
         if not user_found:
             # print("check", user_found)
-            add_user = self.writeFile(self.users_txt, data)
+            reg_data = {"username": data[1], "password": data[2], "email": data[3], "phone": data[4],
+                    "show_money": int(data[5])}
+            self.readFile(self.users_txt)
+            add_user = self.writeFile(self.users_txt, reg_data)
             self.readFile(self.users_txt)
             client.send(f"{add_user}".encode('utf-8'))  # send 1 for register success
         else:
@@ -59,6 +62,7 @@ class Bids_server:
     def login(self, client, log, data):
         user_found = self.check_user(log, data)
         # print("login user found: ", user_found)
+        # print(user_found)
         client.send(f"{user_found}".encode('utf-8'))
         if user_found[0]:
             while True:
@@ -76,14 +80,18 @@ class Bids_server:
                                 self.check_user_and_transfer_amount(client, msg[1], msg[2])
                             elif msg[0] == "update_info":
                                 found_user = self.check_user(msg[0], msg)
-                                # if found_user[0]:
-                                #     client.send(f"{found_user}".encode('utf-8'))
-                                # else:
                                 client.send(f"{found_user}".encode('utf-8'))
                                 if not found_user[0]:
                                     recv_data = client.recv(1024).decode('utf-8')
                                     recv_data = ast.literal_eval(recv_data)
                                     self.update_user_data(recv_data[0], recv_data[1])
+                            elif msg[0] == "create_auction":
+                                create_auction_data = {"title": msg[1], "description": msg[2], "end_date": msg[3], "reserve_price": msg[4], "old_owner": msg[5],
+                                                       "current_owner": msg[6], "highest_bidder": msg[7], "highest_bid": msg[8], "sale": msg[9], "owner_id": msg[10]}
+                                add_auction = self.writeFile(self.auctions_txt, create_auction_data)
+                                client.send(str(add_auction).encode('utf-8'))
+                            else:
+                                print("Received ( while not working others ): ", msg)
                         except Exception as err:
                             print("This is error: ", err)
                             continue
@@ -176,13 +184,17 @@ class Bids_server:
 
     # write file
     def writeFile(self, filename, data):
-        self.readFile(filename)
+        # self.readFile(filename)
         with open(filename, "r") as rfile:
+            # print(data)
             with open(filename, "a") as file:
-                ids = list(json.loads(rfile.readlines()[-1]).keys())
-                data = {"username": data[1], "password": data[2], "email": data[3], "phone": data[4], "show_money": int(data[5]), "my_auctions": []}
+                try:
+                    ids = list(json.loads(rfile.readlines()[-1]).keys())
+                    # print(ids)
+                except Exception as err:
+                    ids = [-1]
                 data = {int(ids[0]) + 1: data}
-                print(data)
+                # print(data)
                 file.write(json.dumps(data) + "\n")
                 return 1
 

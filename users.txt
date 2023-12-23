@@ -1,2 +1,2 @@
-{"0": {"username": "zaw", "password": "zawpass", "email": "zaw@gmail.com", "phone": "09234234234", "show_money": 1970000}}
+{"0": {"username": "zaw", "password": "zawpass", "email": "zaw@gmail.com", "phone": "093453453452", "show_money": 2000000}}
 {"1": {"username": "lwin", "password": "lwinpass", "email": "lwin@gmail.com", "phone": "09345345345", "show_money": 30000}}

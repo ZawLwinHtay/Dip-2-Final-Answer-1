@@ -155,8 +155,7 @@ class Bids_client:
                 elif opt == 4:  # Done Fill Amount
                     self.fill_amount()
                 elif opt == 5:
-                    self.client.send("Press 5 Show All Auctions Status".encode('utf-8'))
-                    msg = self.client.recv(1024).decode('utf-8')
+                    self.show_my_auctions()
                 elif opt == 6:
                     self.client.send("Press 6 to Show My Auctions and Status".encode('utf-8'))
                     msg = self.client.recv(1024).decode('utf-8')
@@ -176,6 +175,44 @@ class Bids_client:
             except Exception as err:
                 print(self.red + "hello_boss err: ", err)
                 self.hello_boss()
+
+    def show_my_auctions(self):
+        try:
+            send_data = ['show_my_auctions', self.myId]
+            self.client.send(str(send_data).encode('utf-8'))
+            recv_data = ast.literal_eval(self.client.recv(1024).decode('utf-8'))
+            self.myAuctions = recv_data
+            if recv_data:
+                auction_no = 1
+                for auct in recv_data:
+                    for k, v in auct.items():
+                        print(self.blue + f"\n===== auction ( {auction_no} ) =====")
+                        auction_no += 1
+                        print(f"id:\t {k}")
+                        print(f"Title:\t {v['title']}")
+                        print(f"Description:\t {v['description']}")
+                        print(f"Auction End_date:\t {v['end_date']}")
+                        print(f"Reserve_price:\t {v['reserve_price']}")
+                        if v['highest_bidder']:
+                            print(f"Old_owner:\t {v['old_owner']}")
+                            print(f"Hightest_Bidder_Name:\t {v['highest_bidder'][0]}")
+                            print(f"Hightest_Bidder_Email:\t {v['highest_bidder'][1]}")
+                            print(f"Hightest_Bidder_Phone:\t {v['highest_bidder'][2]}")
+                            print(f"Highest_Bid:\t {v['highest_bid']}")
+
+                        # True for sale / False for not sale
+                        print(f"sale:\t {v['sale']}")
+
+                # Edit options
+                opt = int(input(self.blue + "\nPress 1 to Edit My Auctions:\nPress 2 to Back:\nEnter Something: "))
+                if opt == 1:
+                    self.editAuctions()
+                elif opt == 2:
+                    self.hello_boss()
+            else:
+                print(self.red + "===== Empty Auctions =====")
+        except Exception as err:
+            print(self.red + "show_my_auctions Err: ", err)
 
     def create_auction(self):
         print(self.blue + "===== This is Auction Create Page =====")

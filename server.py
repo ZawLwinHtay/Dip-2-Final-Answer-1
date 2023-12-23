@@ -20,6 +20,7 @@ class Bids_server:
 
         # file data
         self.all_user = []
+        self.all_auctions = []
 
     def broadcast(self, message):
         # print(self.clients)
@@ -52,9 +53,9 @@ class Bids_server:
             # print("check", user_found)
             reg_data = {"username": data[1], "password": data[2], "email": data[3], "phone": data[4],
                     "show_money": int(data[5])}
-            self.readFile(self.users_txt)
+            self.readFile()
             add_user = self.writeFile(self.users_txt, reg_data)
-            self.readFile(self.users_txt)
+            self.readFile()
             client.send(f"{add_user}".encode('utf-8'))  # send 1 for register success
         else:
             client.send(user_found.encode('utf-8'))  # send 0 for register fail
@@ -90,6 +91,13 @@ class Bids_server:
                                                        "current_owner": msg[6], "highest_bidder": msg[7], "highest_bid": msg[8], "sale": msg[9], "owner_id": msg[10]}
                                 add_auction = self.writeFile(self.auctions_txt, create_auction_data)
                                 client.send(str(add_auction).encode('utf-8'))
+                            elif msg[0] == "show_my_auctions":
+                                my_auctions = []
+                                for i in range(len(self.all_auctions)):
+                                    for k, v in self.all_auctions[i].items():
+                                        if v['owner_id'] == int(msg[1]):
+                                            my_auctions.append(self.all_auctions[i])
+                                client.send(str(my_auctions).encode('utf-8'))
                             else:
                                 print("Received ( while not working others ): ", msg)
                         except Exception as err:
@@ -174,13 +182,20 @@ class Bids_server:
             return exist
 
     # read file
-    def readFile(self, filename):
+    def readFile(self):
         self.all_user = []
-        with open(filename, "r") as file:
+        with open(self.users_txt, "r") as file:
             for line in file.readlines():
                 line = line.strip()
                 user = json.loads(line)
                 self.all_user.append(user)
+
+        self.all_auctions = []
+        with open(self.auctions_txt, "r") as file:
+            for line in file.readlines():
+                line = line.strip()
+                auction = json.loads(line)
+                self.all_auctions.append(auction)
 
     # write file
     def writeFile(self, filename, data):
@@ -203,7 +218,7 @@ class Bids_server:
         with open(self.users_txt, 'w') as file:
             for user in self.all_user:
                 file.write(f"{json.dumps(user)}\n")
-        self.readFile(self.users_txt)
+        self.readFile()
 
     def receive(self):
         while True:
@@ -215,7 +230,7 @@ class Bids_server:
             print(f'{address[1]} has connected to this app.')
 
             # loading all user acc
-            self.readFile(self.users_txt)
+            self.readFile()
 
             thread = threading.Thread(target=self.handle_client, args=(client, address[1]))
             thread.start()

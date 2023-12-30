@@ -141,7 +141,7 @@ class Bids_client:
                 opt = int(
                     input(
                         self.blue + "Press 0 to Show My Info: \nPress 1 to Create Auction:\nPress 2 to Go to Place Bids:\nPress 3 to Transfer Amount:\n"
-                                    "Press 4 to Fill Amount:\nPress 5 to Show All Auctions Status:\nPress 6 to Show My Auctions and Status:\n"
+                                    "Press 4 to Fill Amount:\nPress 5 6 to Show My Auctions and Status:\nPress 6 to Show All Auctions Status:\n"
                                     "Press 7 to Logout:\nPress 8 to Refresh:\nPress 9 to Exit this app:\nEnter Something: "))
                 if opt == 0:  # Done
                     self.show_my_info_and_edit()
